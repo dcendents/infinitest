@@ -33,16 +33,18 @@ import java.io.*;
 
 import org.infinitest.changedetect.*;
 import org.infinitest.filter.*;
+import org.infinitest.mapping.*;
 import org.infinitest.parser.*;
 import org.infinitest.testrunner.*;
 
 /**
  * Used to create instances of an {@link InfinitestCore}.
- * 
+ *
  * @author bjrady
  */
 public class InfinitestCoreBuilder {
 	private TestFilter filterList;
+	private final ResourceMapping resourceMappingFilter;
 	private final Class<? extends TestRunner> runnerClass;
 	private final RuntimeEnvironment runtimeEnvironment;
 	private final EventQueue eventQueue;
@@ -56,6 +58,8 @@ public class InfinitestCoreBuilder {
 		this.eventQueue = eventQueue;
 		String filterFileLocation = environment.getWorkingDirectory().getAbsolutePath() + File.separator + "infinitest.filters";
 		filterList = new RegexFileFilter(new File(filterFileLocation));
+		String mappingFileLocation = environment.getWorkingDirectory().getAbsolutePath() + File.separator + "infinitest.resources";
+		resourceMappingFilter = new RegexResourceMapping(new File(mappingFileLocation));
 		runnerClass = MultiProcessRunner.class;
 		controller = new SingleLockConcurrencyController();
 	}
@@ -69,13 +73,13 @@ public class InfinitestCoreBuilder {
 		DefaultInfinitestCore core = new DefaultInfinitestCore(runner, eventQueue);
 		core.setName(coreName);
 		core.setChangeDetector(new FileChangeDetector());
-		core.setTestDetector(createTestDetector(filterList));
+		core.setTestDetector(createTestDetector(filterList, resourceMappingFilter));
 		core.setRuntimeEnvironment(runtimeEnvironment);
 		return core;
 	}
 
-	protected TestDetector createTestDetector(TestFilter testFilterList) {
-		return new ClassFileTestDetector(testFilterList);
+	protected TestDetector createTestDetector(TestFilter testFilterList, ResourceMapping resourceMappingFilter) {
+		return new ClassFileTestDetector(testFilterList, resourceMappingFilter);
 	}
 
 	/**

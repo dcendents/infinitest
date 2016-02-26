@@ -25,17 +25,49 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.infinitest.changedetect;
+package org.infinitest.eclipse.event;
 
-import java.io.*;
+import static org.eclipse.core.resources.IResourceChangeEvent.*;
 
-class ClassFileFilter implements FileFilter {
-	@Override
-	public boolean accept(File pathname) {
-		return isClassFile(pathname) || pathname.isDirectory();
+import org.eclipse.core.resources.*;
+import org.eclipse.core.runtime.*;
+import org.infinitest.eclipse.workspace.*;
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.stereotype.*;
+
+@Component
+class FeatureFileChangeProcessor extends EclipseEventProcessor {
+	private final WorkspaceFacade workspace;
+
+	@Autowired
+	FeatureFileChangeProcessor(WorkspaceFacade workspace) {
+		super("Looking for tests");
+		this.workspace = workspace;
 	}
 
-	public static boolean isClassFile(File pathname) {
-		return pathname.getAbsolutePath().matches(".*\\.[Cc][Ll][Aa][Ss][Ss]\\z") || pathname.getAbsolutePath().matches(".*\\.[Ff][Ee][Aa][Tt][Uu][Rr][Ee]\\z");
+	@Override
+	public boolean canProcessEvent(IResourceChangeEvent event) {
+		return (event.getType() & (POST_BUILD | POST_CHANGE)) > 0;
+	}
+
+	@Override
+	public void processEvent(IResourceChangeEvent event) throws CoreException {
+		if (containsFeatureFileChanges(getDeltas(event))) {
+			workspace.updateProjects();
+		}
+	}
+
+	private boolean containsFeatureFileChanges(IResourceDelta... deltas) {
+		// DEBT SHould use IResourceDeltaVisitor instead
+		for (IResourceDelta delta : deltas) {
+			if (isFeatureFile(delta) || containsFeatureFileChanges(delta.getAffectedChildren())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isFeatureFile(IResourceDelta delta) {
+		return delta.getFullPath().toPortableString().endsWith(".feature");
 	}
 }

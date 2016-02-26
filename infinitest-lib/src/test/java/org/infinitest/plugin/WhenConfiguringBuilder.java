@@ -29,13 +29,13 @@ package org.infinitest.plugin;
 
 import static org.infinitest.util.FakeEnvironments.*;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 import org.infinitest.*;
 import org.infinitest.filter.*;
+import org.infinitest.mapping.*;
 import org.infinitest.parser.*;
 import org.junit.*;
-import org.mockito.*;
 
 public class WhenConfiguringBuilder {
 	protected InfinitestCoreBuilder builder;
@@ -52,9 +52,9 @@ public class WhenConfiguringBuilder {
 		TestFilter testFilter = mock(TestFilter.class);
 		builder = new InfinitestCoreBuilder(fakeEnvironment(), new FakeEventQueue()) {
 			@Override
-			protected TestDetector createTestDetector(TestFilter testFilter) {
+			protected TestDetector createTestDetector(TestFilter testFilter, ResourceMapping resourceMapping) {
 				filterUsedToCreateCore = testFilter;
-				return super.createTestDetector(testFilter);
+				return super.createTestDetector(testFilter, resourceMapping);
 			}
 		};
 		builder.setFilter(testFilter);

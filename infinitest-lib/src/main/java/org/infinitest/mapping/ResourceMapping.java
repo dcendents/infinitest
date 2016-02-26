@@ -25,17 +25,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.infinitest.changedetect;
+package org.infinitest.mapping;
 
 import java.io.*;
+import java.util.*;
 
-class ClassFileFilter implements FileFilter {
-	@Override
-	public boolean accept(File pathname) {
-		return isClassFile(pathname) || pathname.isDirectory();
-	}
+import org.infinitest.parser.*;
 
-	public static boolean isClassFile(File pathname) {
-		return pathname.getAbsolutePath().matches(".*\\.[Cc][Ll][Aa][Ss][Ss]\\z") || pathname.getAbsolutePath().matches(".*\\.[Ff][Ee][Aa][Tt][Uu][Rr][Ee]\\z");
-	}
+/**
+ * This mapping can be used to run tests when resources are modified.
+ */
+public interface ResourceMapping {
+	/**
+	 * Forces an update of the mappings, if controlled by an external resource.
+	 * This may be necessary if a test class has been removed or added from the
+	 * dependency graph.
+	 */
+	void updateResourceMappingList();
+
+	/**
+	 * Check which test classes should be added to the test run.
+	 *
+	 * @return the set of classes to be added
+	 */
+	Set<JavaClass> getTests(Collection<File> changedFiles, ClassFileIndex index);
 }

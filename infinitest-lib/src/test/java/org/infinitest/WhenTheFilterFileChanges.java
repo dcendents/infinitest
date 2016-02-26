@@ -35,36 +35,37 @@ import java.io.*;
 import java.util.*;
 
 import org.infinitest.filter.*;
+import org.infinitest.mapping.*;
 import org.infinitest.parser.*;
 import org.junit.*;
 
 public class WhenTheFilterFileChanges {
-  @Test
-  public void shouldUpdateTheFilterList() throws IOException {
-    File file = File.createTempFile("infinitest", "shouldUpdateTheFilterList");
+	@Test
+	public void shouldUpdateTheFilterList() throws IOException {
+		File file = File.createTempFile("infinitest", "shouldUpdateTheFilterList");
 
-    TestFilter list = new RegexFileFilter(file);
-    assertFalse(list.match(javaClass("com.foo.Bar")));
+		TestFilter list = new RegexFileFilter(file);
+		assertFalse(list.match(javaClass("com.foo.Bar")));
 
-    new PrintWriter(file).append("com.foo.Bar").close();
-    list.updateFilterList();
-    assertTrue(list.match(javaClass("com.foo.Bar")));
-  }
+		new PrintWriter(file).append("com.foo.Bar").close();
+		list.updateFilterList();
+		assertTrue(list.match(javaClass("com.foo.Bar")));
+	}
 
-  @Test
-  public void shouldRecognizeChangesBeforeLookingForTests() {
-    TestFilter testFilter = mock(TestFilter.class);
-    TestDetector detector = new ClassFileTestDetector(testFilter);
+	@Test
+	public void shouldRecognizeChangesBeforeLookingForTests() {
+		TestFilter testFilter = mock(TestFilter.class);
+		TestDetector detector = new ClassFileTestDetector(testFilter, mock(ResourceMapping.class));
 
-    detector.setClasspathProvider(emptyClasspath());
-    detector.findTestsToRun(Collections.<File>emptySet());
+		detector.setClasspathProvider(emptyClasspath());
+		detector.findTestsToRun(Collections.<File> emptySet());
 
-    verify(testFilter).updateFilterList();
-  }
+		verify(testFilter).updateFilterList();
+	}
 
-  static JavaClass javaClass(String name) {
-    JavaClass javaClass = mock(JavaClass.class);
-    when(javaClass.getName()).thenReturn(name);
-    return javaClass;
-  }
+	static JavaClass javaClass(String name) {
+		JavaClass javaClass = mock(JavaClass.class);
+		when(javaClass.getName()).thenReturn(name);
+		return javaClass;
+	}
 }

@@ -36,17 +36,20 @@ import java.util.logging.*;
 
 import org.infinitest.*;
 import org.infinitest.filter.*;
+import org.infinitest.mapping.*;
 
 /**
  * @author <a href="mailto:benrady@gmail.com"Ben Rady</a>
  */
 public class ClassFileTestDetector implements TestDetector {
 	private final TestFilter filters;
+	private final ResourceMapping resourceMappingFilter;
 	private ClassFileIndex index;
 	private ClasspathProvider classpath;
 
-	public ClassFileTestDetector(TestFilter testFilterList) {
+	public ClassFileTestDetector(TestFilter testFilterList, ResourceMapping resourceMappingFilter) {
 		filters = testFilterList;
+		this.resourceMappingFilter = resourceMappingFilter;
 	}
 
 	@Override
@@ -61,6 +64,7 @@ public class ClassFileTestDetector implements TestDetector {
 	@Override
 	public synchronized Set<JavaClass> findTestsToRun(Collection<File> changedFiles) {
 		filters.updateFilterList();
+		resourceMappingFilter.updateResourceMappingList();
 
 		// Find changed classes
 		Set<JavaClass> changedClasses = index.findClasses(changedFiles);
@@ -68,6 +72,9 @@ public class ClassFileTestDetector implements TestDetector {
 
 		// combine two sets
 		changedClasses.addAll(changedParents);
+
+		// add any resource mapping tests
+		changedClasses.addAll(resourceMappingFilter.getTests(changedFiles, index));
 
 		// run through total set, and pick out tests to run
 		log(Level.FINE, "Total changeset: " + changedParents);
